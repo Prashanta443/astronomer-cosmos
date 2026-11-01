@@ -2,47 +2,40 @@ from datetime import timedelta
 from pendulum import datetime
 
 from airflow.sdk import dag,task
-from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.empty import EmptyOperator
 
 
-def say_hello():
-    print("Hello from PythonOperator!")
-
-
 @dag(
-    dag_id="schedule_interval",
-    start_date=datetime(2026, 1, 1,tz="Asia/Kathmandu"),
-    schedule="30 2 * * *",
-    is_paused_upon_creation=False,  
-    catchup=False,
-    max_active_runs=1,
-    tags=['scheduling dag','learn scheduling']
+    dag_id = 'scheduling_task',
+    schedule = '20 7 * * *',
+    start_date = datetime(2026,9,21, tz = "Asia/Kathmandu"),
+    catchup = False,
+    is_paused_upon_creation = False,
+    tags = ['scheduling airflow dag'],
+    max_active_runs = 1
 )
 
-def schedule_example():
+def schedule_dag():
     @task.python(
-        retries=3,
-        retry_delay=timedelta(minutes=5)
+        retries = 3,
+        retry_delay = timedelta(minutes = 3)
     )
-    def process_data():
-        print("Processing data...")
-
-    start = EmptyOperator(
-        task_id="start"
-    )
+    def first_task():
+        print("print hello from python")
+    
     @task.bash
-    def bash_task():
-        return "echo 'Hello from BashOperator!'"
-
-
-
+    def processing_data():
+        return "echo 'Hello from bash task operator!'"
+    
     end = EmptyOperator(
-        task_id="end-task"
+        task_id = "task_end"
     )
-    # there should not be sapce in between
-    bash_task = bash_task()
-    process_data = process_data()
-    start >> bash_task >> process_data >> end
 
-schedule_example()
+    start = first_task()
+    process = processing_data()
+
+    start >> process >> end 
+
+
+schedule_dag()
+
